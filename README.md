@@ -11,17 +11,20 @@ These updates ensure the launcher remains functional, secure, and performant on 
 > **Pro Tip:** On the very first install, if background transparency does not take effect immediately, simply type \`restart\` in the terminal and press enter.
 
 ### ⌨️ New Commands
-*   **`username [user] [device]`**: Instantly customize your terminal prompt. Changes both the username and device name and reloads the UI to apply.
-*   **`theme -preset [name]`**: Rapidly switch between high-quality pre-configured themes.
-    *   **Available Presets:** `blue`, `red`, `green`, `pink`, `bw`, `cyberpunk`.
-    *   **Smart Suggestions:** Applying a preset automatically colors the suggestion bar and shortcut buttons to match the aesthetic.
-*   **`bbman`**: The new BusyBox manager for installing and verifying Linux binaries.
+*   **`ai [prompt]`**: Integrated Gemini AI assistant with markdown rendering and variable storage.
+*   **`pkg -install [pkg]`**: Hybrid package manager for custom T-UI scripts and native Termux packages.
+*   **`dashboard -on`**: Interactive telemetry dashboard with expandable grid layout.
+*   **`tedit [file.tui]`**: Pro script editor for automation.
+*   **`username [user] [device]`**: Prompt customization.
+*   **`theme -preset [name]`**: Theme switching.
+*   **`bbman`**: BusyBox binary manager.
 
 ### ✨ Enhanced Features
-*   **Built-in BusyBox Manager:** Gain access to 300+ Linux commands (ls, grep, awk, top, etc.) via the new `bbman -install` command.
-*   **Theme Preset Shortcut Buttons:** Enhanced the `theme -preset` command to show interactive shortcut buttons for presets.
-*   **Synchronized Theme UI:** Applying a preset now automatically colors the shortcut buttons (suggestions) to match the overall theme.
-*   **One-Tap Application:** Shortcut buttons for theme presets execute immediately upon clicking.
+*   **Gemini AI Suite:** Interact with Google's Gemini models. Set custom personalities and store AI responses into launcher variables.
+*   **Pro Scripting Engine:** Full support for `.tui` automation files with a Nordic-style editor, variable resolution, and command injection.
+*   **Interactive Dashboard:** Real-time telemetry grid. Click to expand into a high-density 5x5 view.
+*   **Termux Bridge:** Built-in `login -d` wrapper that bridges T-UI directly to the Termux environment, fixing "inaccessible binary" errors.
+*   **Foreground Download Service:** Reliable background installation with real-time CLI and notification progress bars.
 
 ---
 

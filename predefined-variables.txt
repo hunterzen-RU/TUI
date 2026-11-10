@@ -1,0 +1,56 @@
+# T-UI Predefined System Variables
+
+These variables are automatically resolved by the T-UI engine at runtime. You can use them in `.tui` scripts, aliases, or directly in commands using the `{{variable_name}}` or `$variable_name` syntax.
+
+## 📊 System Telemetry
+
+| Variable | Description | Example Output |
+| :--- | :--- | :--- |
+| `{{cpu_usage}}` | Current CPU load percentage | `15` |
+| `{{ram_total}}` | Total installed RAM (GB) | `8.0G` |
+| `{{ram_avail}}` | Currently available RAM (GB) | `2.4G` |
+| `{{ram_used}}` | Currently used RAM (GB) | `5.6G` |
+| `{{battery}}` | Current battery level (%) | `85` |
+| `{{battery_level}}` | Battery charge level percentage | `85` |
+| `{{battery_status}}` | Battery charging status (Charging/Discharging) | `Charging` |
+| `{{storage_total}}` | Total internal storage (GB) | `128G` |
+| `{{storage_avail}}` | Available internal storage (GB) | `42G` |
+| `{{uptime}}` | System uptime in seconds | `3600` |
+
+## 📱 Device & User Details
+
+| Variable | Description | Example Output |
+| :--- | :--- | :--- |
+| `{{device}}` | Device model name | `Pixel 9 Pro` |
+| `{{user}}` | T-UI username (from ui.xml) | `admin` |
+| `{{os_version}}` | Android version | `Android 14` |
+| `{{network}}` | Active network type | `WIFI` or `MOBILE` |
+| `{{network_name}}` | SSID (WiFi) or Subtype (Mobile) | `MyHomeWiFi` |
+| `{{network_upload}}` | Total data uploaded since boot | `450MB` |
+| `{{network_download}}` | Total data downloaded since boot | `1.2GB` |
+
+## 📅 Temporal Variables
+
+| Variable | Description | Example Output |
+| :--- | :--- | :--- |
+| `{{date}}` | Current date (YYYY-MM-DD) | `2024-11-09` |
+| `{{time}}` | Current time (HH:mm:ss) | `14:30:05` |
+
+---
+
+## 🛠 Usage Examples
+
+### 1. In a .tui Script
+```tui
+echo "Status Report for {{user}} on {{device}}"
+echo "----------------------------------------"
+echo "Battery: {{battery}}% | Network: {{network}}"
+echo "RAM Used: {{ram_used}} / {{ram_total}}"
+```
+
+### 2. In an Alias
+You can create an alias that uses these variables:
+`alias -add sysinfo="echo Device: {{device}} ({{os_version}})"`
+
+### 3. In a Command
+`$ echo Current CPU usage is {{cpu_usage}}%`

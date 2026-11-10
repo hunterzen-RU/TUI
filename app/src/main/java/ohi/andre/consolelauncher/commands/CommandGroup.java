@@ -11,7 +11,9 @@ import java.util.Iterator;
 import java.util.List;
 
 import ohi.andre.consolelauncher.commands.main.specific.APICommand;
+import ohi.andre.consolelauncher.managers.PluginManager;
 import ohi.andre.consolelauncher.tuils.Tuils;
+import ohi.andre.consolelauncher.tuils.interfaces.TuiCommandPlugin;
 
 public class CommandGroup {
 
@@ -41,6 +43,16 @@ public class CommandGroup {
             }
         }
 
+        Collections.sort(cmds);
+        
+        // Load External Plugins
+        PluginManager pluginManager = new PluginManager(c);
+        List<TuiCommandPlugin> plugins = pluginManager.loadPlugins();
+        for (TuiCommandPlugin plugin : plugins) {
+            cmdAbs.add(plugin);
+            cmds.add(plugin.getPluginName());
+        }
+        
         Collections.sort(cmds);
         commandNames = new String[cmds.size()];
         cmds.toArray(commandNames);

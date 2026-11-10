@@ -1,0 +1,8 @@
+{
+  "name": "T-UI Console Launcher",
+  "description": "CLI-style Android Terminal Launcher with custom commands, themes, aliases, and system tools.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

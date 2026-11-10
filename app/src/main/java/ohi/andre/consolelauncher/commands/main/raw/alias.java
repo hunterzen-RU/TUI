@@ -24,8 +24,12 @@ public class alias extends ParamCommand {
                 ArrayList<String> args = pack.getList();
                 if(args.size() < 2) return pack.context.getString(R.string.output_lessarg);
 
-                ((MainPack) pack).aliasManager.add(pack.context, args.remove(0), Tuils.toPlanString(args, Tuils.SPACE));
-                return null;
+                String name = args.remove(0);
+                String val = Tuils.toPlanString(args, Tuils.SPACE);
+
+                ((MainPack) pack).aliasManager.add(pack.context, name, val);
+                new ohi.andre.consolelauncher.managers.AliasDbHelper(pack.context).setAlias(name, val);
+                return "Alias mapped: " + name + " --> " + val;
             }
 
             @Override
@@ -38,8 +42,10 @@ public class alias extends ParamCommand {
             public String exec(ExecutePack pack) {
                 ArrayList<String> args = pack.getList();
                 if(args.size() < 1) return pack.context.getString(R.string.output_lessarg);
-                ((MainPack) pack).aliasManager.remove(pack.context, args.get(0));
-                return null;
+                String name = args.get(0);
+                ((MainPack) pack).aliasManager.remove(pack.context, name);
+                new ohi.andre.consolelauncher.managers.AliasDbHelper(pack.context).removeAlias(name);
+                return "Alias removed: " + name;
             }
 
             @Override
@@ -62,7 +68,20 @@ public class alias extends ParamCommand {
         ls {
             @Override
             public String exec(ExecutePack pack) {
-                return ((MainPack) pack).aliasManager.printAliases();
+                StringBuilder sb = new StringBuilder();
+                String fileAliases = ((MainPack) pack).aliasManager.printAliases();
+                if (fileAliases != null && !fileAliases.isEmpty()) {
+                    sb.append(fileAliases).append("\n");
+                }
+                java.util.List<ohi.andre.consolelauncher.managers.AliasDbHelper.AliasEntry> dbAliases =
+                        new ohi.andre.consolelauncher.managers.AliasDbHelper(pack.context).getAllAliases();
+                if (!dbAliases.isEmpty()) {
+                    sb.append("\n[SQLite Aliases]:\n");
+                    for (ohi.andre.consolelauncher.managers.AliasDbHelper.AliasEntry e : dbAliases) {
+                        sb.append(e.getName()).append(" --> ").append(e.getValue()).append("\n");
+                    }
+                }
+                return sb.toString().trim();
             }
 
             @Override

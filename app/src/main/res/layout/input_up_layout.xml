@@ -67,30 +67,57 @@
 
     </LinearLayout>
 
-    <LinearLayout android:id="@+id/tools_view"
+    <HorizontalScrollView android:id="@+id/tools_scroll_container"
         android:layout_width="match_parent"
         android:layout_height="@dimen/tools_height"
-        android:orientation="horizontal"
+        android:scrollbars="none"
+        android:overScrollMode="never">
 
-        android:weightSum="@integer/tools_view_weightsum">
+        <LinearLayout android:id="@+id/tools_view"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <ImageButton android:id="@+id/delete_view"
-            style="@style/ToolsBar"
-            android:src="@drawable/ic_clear"/>
+            <ImageButton android:id="@+id/delete_view"
+                style="@style/ToolsBarButton"
+                android:src="@drawable/ic_clear"/>
 
-        <ImageButton android:id="@+id/back_view"
-            style="@style/ToolsBar"
-            android:src="@drawable/ic_back"/>
+            <ImageButton android:id="@+id/back_view"
+                style="@style/ToolsBarButton"
+                android:src="@drawable/ic_back"/>
 
-        <ImageButton android:id="@+id/next_view"
-            style="@style/ToolsBar"
-            android:src="@drawable/ic_next"/>
+            <ImageButton android:id="@+id/next_view"
+                style="@style/ToolsBarButton"
+                android:src="@drawable/ic_next"/>
 
-        <ImageButton android:id="@+id/paste_view"
-            style="@style/ToolsBar"
-            android:src="@drawable/ic_paste"/>
+            <ImageButton android:id="@+id/paste_view"
+                style="@style/ToolsBarButton"
+                android:src="@drawable/ic_paste"/>
 
-    </LinearLayout>
+            <TextView android:id="@+id/ctrl_view"
+                style="@style/ToolsTextButton"
+                android:text="CTRL"/>
+
+            <TextView android:id="@+id/shift_view"
+                style="@style/ToolsTextButton"
+                android:text="SHIFT"/>
+
+            <TextView android:id="@+id/alt_view"
+                style="@style/ToolsTextButton"
+                android:text="ALT"/>
+
+            <TextView android:id="@+id/left_view"
+                style="@style/ToolsTextButton"
+                android:text="LEFT"/>
+
+            <TextView android:id="@+id/right_view"
+                style="@style/ToolsTextButton"
+                android:text="RIGHT"/>
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
 
     <ScrollView
         android:layout_width="match_parent"

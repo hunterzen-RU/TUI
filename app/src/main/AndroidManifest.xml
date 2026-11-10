@@ -9,6 +9,8 @@
         android:smallScreens="true" />
 
     <!-- permissions -->
+    <uses-permission android:name="android.permission.WRITE_SMS" />
+    <uses-permission android:name="android.permission.SEND_SMS"/>
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.FLASHLIGHT" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
@@ -37,6 +39,14 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.REQUEST_DELETE_PACKAGES" />
+    <uses-permission android:name="ohi.andre.consolelauncher.permission.RECEIVE_CMD" />
+
+    <queries>
+        <package android:name="com.arlosoft.macrodroid" />
+        <intent>
+            <action android:name="com.arlosoft.macrodroid.macro.RUN_MACRO" />
+        </intent>
+    </queries>
 
     <!-- features -->
     <uses-feature
@@ -80,6 +90,7 @@
     <application
         android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="@string/app_name"
         android:theme="@style/Custom.Solid"
         android:usesCleartextTraffic="false"
@@ -114,6 +125,15 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LAUNCHER_APP" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="file" />
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:pathPattern=".*\\.tui" />
             </intent-filter>
         </activity>
 
@@ -220,6 +240,10 @@
                     android:scheme="file" />
                 <data
                     android:host="*"
+                    android:pathPattern=".*\\.tui"
+                    android:scheme="file" />
+                <data
+                    android:host="*"
                     android:pathPattern=".*\\.txt"
                     android:scheme="file" />
                 <data
@@ -242,6 +266,15 @@
             android:name=".managers.notifications.NotificationMonitorService"
             android:exported="false" />
 
+        <service
+            android:name=".managers.TuiDownloadService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_TYPE"
+                android:value="Downloads TUI packages and scripts in the background to ensure reliability."/>
+        </service>
+
         <activity
             android:name=".tuils.stuff.FakeLauncherActivity"
             android:enabled="false"
@@ -253,6 +286,49 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".tuils.TuiEditorActivity"
+            android:label="TUI Editor"
+            android:theme="@style/Custom.Solid"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".managers.AiChatActivity"
+            android:label="AI Chat"
+            android:theme="@style/Custom.Solid"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".managers.GridAppLauncherActivity"
+            android:label="App Launcher"
+            android:theme="@style/Custom.Solid"
+            android:exported="false" />
+
+        <activity
+            android:name=".managers.plugins.PluginHostActivity"
+            android:label="T-UI Plugin Host"
+            android:theme="@style/Custom.Solid"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <activity
+            android:name=".managers.plugins.PluginStudioActivity"
+            android:label="T-UI Plugin Studio"
+            android:theme="@style/Custom.Solid"
+            android:windowSoftInputMode="adjustResize"
+            android:exported="false" />
+
+        <receiver
+            android:name=".tuils.PublicIOReceiver"
+            android:permission="ohi.andre.consolelauncher.permission.RECEIVE_CMD"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="ohi.andre.consolelauncher.action_public_cmd" />
+                <action android:name="ohi.andre.consolelauncher.action_public_output" />
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

@@ -1,27 +1,31 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
 
 android {
     namespace "ohi.andre.consolelauncher"
     compileSdk 34
 
-    def keystorePropertiesFile = rootProject.file("local.properties")
-    def keystoreProperties = new Properties()
-    if (keystorePropertiesFile.exists()) {
-        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
-    }
-
     signingConfigs {
-        release {
-            storeFile file("../" + (keystoreProperties["storeFile"] ?: "release.jks"))
-            storePassword = keystoreProperties["storePassword"] ?: ""
-            keyAlias = keystoreProperties["keyAlias"] ?: "tui-alias"
-            keyPassword = keystoreProperties["keyPassword"] ?: ""
+        debugConfig {
+            storeFile = file("${rootDir}/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
+
+        releaseConfig {
+            if (System.getenv("RELEASE_STORE_FILE") != null) {
+                storeFile = file(System.getenv("RELEASE_STORE_FILE"))
+                storePassword = System.getenv("RELEASE_STORE_PASSWORD")
+                keyAlias = System.getenv("RELEASE_KEY_ALIAS")
+                keyPassword = System.getenv("RELEASE_KEY_PASSWORD")
+            }
         }
     }
 
     defaultConfig {
-        applicationId "ohi.andre.consolelauncher"
-        minSdk 21
+        applicationId "com.aistudio.consolelauncher.tuiapp"
+        minSdk 26
         targetSdk 34
         versionCode 301
         versionName "v6.15.1-updated-v2"
@@ -31,33 +35,36 @@ android {
 
     buildFeatures {
         buildConfig true
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.5.8'
     }
 
     buildTypes {
         debug {
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.debugConfig
         }
         release {
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
-        }
-    }
-
-    productFlavors {
-        flavorDimensions = ["default"]
-        fdroid {
-            dimension "default"
-        }
-        playstore {
-            dimension "default"
+            if (System.getenv("RELEASE_STORE_FILE") != null) {
+                signingConfig signingConfigs.releaseConfig
+            } else {
+                signingConfig signingConfigs.debugConfig
+            }
         }
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 
     lint {
@@ -69,10 +76,27 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
-    
+
+    def composeBom = platform('androidx.compose:compose-bom:2024.02.00')
+    implementation composeBom
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.activity:activity-compose:1.8.2'
+
     implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     implementation 'net.sourceforge.htmlcleaner:htmlcleaner:2.29'
     implementation 'com.jayway.jsonpath:json-path:2.9.0'
     implementation 'org.jsoup:jsoup:1.17.2'
     implementation 'it.andreuzzi:CompareString2:1.0.9'
+    implementation 'androidx.work:work-runtime-ktx:2.9.0'
+    implementation 'com.cronutils:cron-utils:9.2.1'
+
+    // Google AI SDK (Gemini)
+    implementation 'com.google.ai.client.generativeai:generativeai:0.9.0'
+    implementation 'com.google.guava:guava:33.0.0-android'
+
+    // Markdown Rendering
+    implementation 'io.noties.markwon:core:4.6.2'
 }

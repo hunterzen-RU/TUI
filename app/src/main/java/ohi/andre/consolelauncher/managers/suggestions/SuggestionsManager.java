@@ -55,7 +55,6 @@ import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.managers.xml.options.Reply;
 import ohi.andre.consolelauncher.managers.xml.options.Rss;
 import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
-import ohi.andre.consolelauncher.tuils.BusyBoxInstaller;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
 
@@ -586,6 +585,7 @@ public class SuggestionsManager {
 
                 if(showAliasDefault) suggestAlias(pack.aliasManager, suggestionList, lastWord);
                 if(showAppsGpDefault) suggestAppGroup(pack, suggestionList, lastWord, beforeLastSpace );
+                suggestTuiPackages(pack.context, suggestionList, lastWord, beforeLastSpace);
             }
 
 //            lastword == 0 && beforeLastSpace > 0
@@ -682,6 +682,7 @@ public class SuggestionsManager {
                 suggestAlias(pack.aliasManager, suggestionList, lastWord);
                 suggestApp(pack, suggestionList, lastWord, Tuils.EMPTYSTRING);
                 suggestAppGroup(pack, suggestionList, lastWord, beforeLastSpace );
+                suggestTuiPackages(pack.context, suggestionList, lastWord, beforeLastSpace);
             }
         }
 
@@ -709,6 +710,19 @@ public class SuggestionsManager {
                 canInsert--;
 
                 suggestions.add(new Suggestion(Tuils.EMPTYSTRING, a.name, clickToLaunch && !a.isParametrized, Suggestion.TYPE_ALIAS));
+            }
+        }
+    }
+
+    private void suggestTuiPackages(Context context, List<Suggestion> suggestions, String lastWord, String beforeLastSpace) {
+        int canInsert = lastWord == null || lastWord.length() == 0 ? noInputCounts[Suggestion.TYPE_COMMAND] : counts[Suggestion.TYPE_COMMAND];
+        java.util.Map<String, String> installed = ohi.andre.consolelauncher.managers.PackageManager.getInstalledPackagesMap(context);
+
+        for (String pkgName : installed.keySet()) {
+            if (lastWord == null || lastWord.length() == 0 || pkgName.toLowerCase().startsWith(lastWord.toLowerCase())) {
+                if (canInsert == 0) return;
+                canInsert--;
+                suggestions.add(new Suggestion(beforeLastSpace, pkgName, true, Suggestion.TYPE_COMMAND));
             }
         }
     }
@@ -791,6 +805,19 @@ public class SuggestionsManager {
             case CommandAbstraction.THEME_PRESET:
                 suggestThemePresets(suggestions, afterLastSpace, beforeLastSpace);
                 break;
+            case CommandAbstraction.TEXTLIST:
+                if (beforeLastSpace != null && beforeLastSpace.trim().startsWith("macro")) {
+                    suggestMacroNames(suggestions, afterLastSpace, beforeLastSpace);
+                }
+                break;
+        }
+    }
+
+    private void suggestMacroNames(List<Suggestion> suggestions, String afterLastSpace, String beforeLastSpace) {
+        List<String> macroNames = ohi.andre.consolelauncher.managers.MacroSuggestionsProvider.INSTANCE.getMacroSuggestions(afterLastSpace != null ? afterLastSpace : "");
+        for (String mName : macroNames) {
+            String formattedName = mName.contains(" ") ? "\"" + mName + "\"" : mName;
+            suggestions.add(new Suggestion(beforeLastSpace, formattedName, false, Suggestion.TYPE_COMMAND));
         }
     }
 

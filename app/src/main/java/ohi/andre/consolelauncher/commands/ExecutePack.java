@@ -36,7 +36,27 @@ public abstract class ExecutePack {
     }
 
     public String getString() {
-        return (String) get();
+        Object o = get();
+        if (o == null) return null;
+        if (o instanceof String) {
+            return (String) o;
+        } else if (o instanceof java.util.List) {
+            return ohi.andre.consolelauncher.tuils.Tuils.toPlanString((java.util.List) o, " ");
+        } else if (o instanceof Object[]) {
+            Object[] arr = (Object[]) o;
+            StringBuilder sb = new StringBuilder();
+            for (Object item : arr) {
+                if (sb.length() > 0) sb.append(" ");
+                if (item instanceof java.util.List) {
+                    sb.append(ohi.andre.consolelauncher.tuils.Tuils.toPlanString((java.util.List) item, " "));
+                } else {
+                    sb.append(String.valueOf(item));
+                }
+            }
+            return sb.toString();
+        } else {
+            return o.toString();
+        }
     }
 
     public int getInt() {

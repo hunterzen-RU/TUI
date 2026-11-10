@@ -24,6 +24,7 @@ import ohi.andre.consolelauncher.commands.main.raw.location;
 import ohi.andre.consolelauncher.commands.main.specific.RedirectCommand;
 import ohi.andre.consolelauncher.managers.AliasManager;
 import ohi.andre.consolelauncher.managers.AppsManager;
+import ohi.andre.consolelauncher.managers.HybridCommandInterpreter;
 import ohi.andre.consolelauncher.managers.ChangelogManager;
 import ohi.andre.consolelauncher.managers.ContactManager;
 import ohi.andre.consolelauncher.managers.HTMLExtractManager;
@@ -38,7 +39,6 @@ import ohi.andre.consolelauncher.managers.notifications.KeeperService;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
-import ohi.andre.consolelauncher.tuils.BusyBoxInstaller;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
 import ohi.andre.consolelauncher.tuils.StoppableThread;
 import ohi.andre.consolelauncher.tuils.Tuils;
@@ -102,6 +102,7 @@ public class MainManager {
     private final String COMMANDS_PKG = "ohi.andre.consolelauncher.commands.main.raw";
 
     private CmdTrigger[] triggers = new CmdTrigger[] {
+            new MacroTrigger(),
             new GroupTrigger(),
             new AliasTrigger(),
             new TuiCommandTrigger(),
@@ -285,6 +286,14 @@ public class MainManager {
 //    command manager
     public void onCommand(String input, String alias, boolean wasMusicService) {
         input = Tuils.removeUnncesarySpaces(input);
+        
+        // Resolve variables for all input
+        input = ohi.andre.consolelauncher.managers.VariablesManager.resolveVariables(mContext, input, null);
+
+        // Redirect 'set var=val' to 'variables -set var=val'
+        if (input.toLowerCase().startsWith("set ") && !input.contains(" -")) {
+            input = "variables -set " + input.substring(4).trim();
+        }
 
         if(alias == null) updateServices(input, wasMusicService);
 
@@ -433,6 +442,34 @@ public class MainManager {
         boolean trigger(MainPack info, String input) throws Exception;
     }
 
+    private class MacroTrigger implements CmdTrigger {
+        @Override
+        public boolean trigger(MainPack info, String input) throws Exception {
+            HybridCommandInterpreter interpreter = new HybridCommandInterpreter(info.context, info);
+            HybridCommandInterpreter.CommandResult result = interpreter.handleInput(input);
+            if (result instanceof HybridCommandInterpreter.CommandResult.Scheduled) {
+                HybridCommandInterpreter.CommandResult.Scheduled sched = (HybridCommandInterpreter.CommandResult.Scheduled) result;
+                java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault());
+                String nextStr = sdf.format(new java.util.Date(sched.getNextRunMillis()));
+                Tuils.sendOutput(mContext, "Scheduled job [" + sched.getTag() + "] with cron \"" + sched.getCronExpr() + "\"\nNext run: " + nextStr + "\nAction: " + sched.getAction());
+                return true;
+            } else if (result instanceof HybridCommandInterpreter.CommandResult.ActionExecuted) {
+                HybridCommandInterpreter.CommandResult.ActionExecuted act = (HybridCommandInterpreter.CommandResult.ActionExecuted) result;
+                Tuils.sendOutput(mContext, act.getOutput());
+                return true;
+            } else if (result instanceof HybridCommandInterpreter.CommandResult.MacroTriggered) {
+                HybridCommandInterpreter.CommandResult.MacroTriggered macroRes = (HybridCommandInterpreter.CommandResult.MacroTriggered) result;
+                if (macroRes.getIntentSent()) {
+                    Tuils.sendOutput(mContext, "MacroDroid: Triggered \"" + macroRes.getMacroName() + "\" (" + macroRes.getVariables().size() + " vars)");
+                } else {
+                    Tuils.sendOutput(mContext, "MacroDroid: Failed to send intent for \"" + macroRes.getMacroName() + "\"");
+                }
+                return true;
+            }
+            return false;
+        }
+    }
+
     private class AliasTrigger implements CmdTrigger {
 
         @Override
@@ -514,16 +551,6 @@ public class MainManager {
             final String trimmed = input.trim();
             final String cmd = trimmed.split(" ")[0];
 
-            if (!BusyBoxInstaller.isInstalled(mContext)) {
-                String[] common = {"ping", "echo", "ls", "grep", "cat", "vi", "top", "ps", "ip"};
-                for (String c : common) {
-                    if (cmd.equalsIgnoreCase(c)) {
-                        Tuils.sendOutput(mContext, "Command not found. You can install BusyBox using: bbman -install", TerminalManager.CATEGORY_OUTPUT);
-                        return true;
-                    }
-                }
-            }
-
             new StoppableThread() {
                 @Override
                 public void run() {
@@ -557,7 +584,10 @@ public class MainManager {
         public boolean trigger(final MainPack info, final String input) throws Exception {
 
             final Command command = CommandTuils.parse(input, info);
-            if(command == null) return false;
+            if(command == null) {
+                android.util.Log.d("MainManager", "Command not parsed: " + input);
+                return false;
+            }
 
             mainPack.lastCommand = input;
 
@@ -567,9 +597,25 @@ public class MainManager {
                     super.run();
 
                     try {
-                        String output = command.exec(info);
-                        if(output != null) {
+                        Object resultObj = command.exec(info);
+                        android.util.Log.d("MainManager", "Command: " + input + ", Result: " + resultObj + " Type: " + (resultObj != null ? resultObj.getClass().getName() : "null"));
+                        String output = null;
+                        if (resultObj instanceof String) {
+                            output = (String) resultObj;
+                        } else if (resultObj instanceof List) {
+                            output = Tuils.toPlanString((List) resultObj, "\n");
+                        } else if (resultObj instanceof CharSequence) {
+                            output = ((CharSequence) resultObj).toString();
+                        } else if (resultObj != null) {
+                            output = String.valueOf(resultObj);
+                        }
+
+                        android.util.Log.d("MainManager", "Parsed Output: " + output);
+                        if(output != null && !output.isEmpty()) {
+                            android.util.Log.d("MainManager", "Sending output: " + output);
                             Tuils.sendOutput(info, output, TerminalManager.CATEGORY_OUTPUT);
+                        } else {
+                            android.util.Log.d("MainManager", "Result was null or empty, not sending output");
                         }
                     } catch (Exception e) {
                         Tuils.sendOutput(mContext, Tuils.getStackTrace(e));
