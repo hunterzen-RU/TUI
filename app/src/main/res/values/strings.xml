@@ -2,6 +2,26 @@
 
     <!-- various text -->
     <string name="app_name">T-UI</string>
+    <string name="help_macro">Inbuilt macro automation engine.\nUsage:\n  macro -rec &lt;name&gt; [desc] : Record terminal commands\n  macro -stop : Save recording\n  macro -cancel : Cancel recording\n  macro -ls : List all macros\n  macro -info &lt;name&gt; : View macro details\n  macro -run &lt;name&gt; [args...] : Execute macro\n  macro -rm &lt;name&gt; : Delete macro\n  macro -file : Path to macros.json</string>
+    <string name="help_history">View last 20 macro execution history entries from SQLite storage.\nUsage: history [clear]</string>
+    <string name="help_termux">Manage Termux shell sessions.\nUsage:\ntermux login -> Start interactive shell session\ntermux status -> Display shell availability &amp; environment</string>
+    <string name="help_shell">Execute a shell command directly bypassing interpreter.\nUsage: shell [command]</string>
+    <string name="help_schedule">Schedule actions using 5-field cron pattern with WorkManager.\nUsage:\nschedule -add \"*/15 * * * *\" [action]\nschedule -ls\nschedule -rm [tag]\nschedule -clear</string>
+    <string name="help_notify">Post a system notification.\nUsage: notify \"[title]\" \"[message]\"</string>
+    <string name="help_launch">Launch an app by package name or specific component.\nUsage: launch [package_name] [activity_name]</string>
+    <string name="help_dashboard">Manage dashboard display mode and configuration.\nUsage:\n$ dashboard -mode grid -> Switch to modern grid dashboard\n$ dashboard -mode native -> Switch to legacy list dashboard\n$ dashboard -toggle -> Toggle between grid and native modes\n$ dashboard -layout 2x2 -> Change grid layout (1x1 to 5x5)\n$ dashboard -items -> List all configured box items from dashboard-item.xml\n$ dashboard -set [box#] [type] [title] [color] -> Configure a dashboard box\n$ dashboard -add [type] [title] [color] -> Add a new dashboard box\n$ dashboard -del [box#] -> Delete a dashboard box\n$ dashboard -reset -> Reset boxes to default 25\n$ dashboard -itemfile -> Open dashboard-item.xml\n$ dashboard -file -> Open dashboard.xml</string>
+    <string name="help_toast">Display a system toast notification.\nUsage:\n$ toast [text] -> Show quick toast\n$ toast -long [text] -> Show long duration toast</string>
+    <string name="help_run">Execute a .tui automation script file.\nUsage:\n$ run [file.tui] -> Run .tui automation script containing commands, sleep, and actions</string>
+    <string name="help_tedit">Open the specialized .tui script editor with syntax highlighting.\nUsage:\n$ tedit [file.tui]</string>
+    <string name="help_variables">Manage global variables stored in variable.xml / variables.xml.\nUsage:\n$ variables -set [var]=[val] -> Set variable value\n$ variables -get [var] -> Retrieve variable value, description, and live value\n$ variables -desc [var] [desc] -> Update variable description\n$ variables -ls -> List all predefined and custom variables with descriptions\n$ variables -file -> Open variable.xml</string>
+    <string name="help_pkg">Package manager to search, install, and remove custom T-UI packages &amp; scripts from GitHub Pages.\nUsage:\n$ pkg -install [pkg_name] -> Install package or .tui script\n$ pkg -search [query] -> Search repository packages\n$ pkg -ls -> List installed packages\n$ pkg -rm [pkg_name] -> Remove an installed package\n$ pkg -repo [url] -> View or set GitHub Pages repo URL</string>
+    <string name="help_tui_run">Run any Termux command inside TUI using the login wrapper.\nUsage:\n$ tui_run [command] [args]</string>
+    <string name="help_tui_manager">Manage package installation engine (Hybrid/Native/Apt/Pkg).\nUsage:\n$ tui install [package] -> Install package (Hybrid/Bypass)\n$ tui set [mgr] -> Force package manager (apt|pkg|hybrid)\n$ tui get -> Show active package manager</string>
+    <string name="help_ai">Gemini AI integration.\nUsage:\n$ ai [prompt] -> Ask Gemini a question\n$ ai -key [apikey] -> Set Gemini API key\n$ ai -test -> Test AI connection\n$ ai -set [prompt] [variable] -> Store AI response in a variable\n$ ai -sys [prompt] -> Update system prompt</string>
+    <string name="help_api_cmd">API key management.\nUsage:\n$ api -key [apikey] -> Set Gemini API key</string>
+    <string name="help_plugin">Plugin manager and code studio for modular T-UI extensions.\nUsage:\n$ plugin -ls -> List installed plugins\n$ plugin -info [id] -> Show plugin details and manifest\n$ plugin -launch [id] [args] -> Launch/execute a plugin\n$ plugin -studio -> Open GUI Plugin Code Studio\n$ plugin -create [id] [template] -> Create plugin scaffold\n$ plugin -templates -> Browse online templates from repository\n$ plugin -install [url|zip] -> Install plugin from ZIP or URL\n$ plugin -export [id] -> Package plugin as ZIP\n$ plugin -rm [id] -> Uninstall plugin</string>
+    <string name="help_sys">System telemetry, architecture info, and ASCII visualizers.\nUsage:\n$ sys -> Display system overview and architecture\n$ sys -graph -> Render live ASCII progress graphs (CPU, RAM, Disk, Battery)\n$ sys -battery -> Detailed battery health, temp, and power source\n$ sys -net -> Network stats, speed, and bandwidth counters\n$ sys -storage -> Internal and external storage partitions</string>
+    <string name="help_voice">Hands-free voice recognition input using Android SpeechRecognizer.\nUsage:\n$ voice -> Start speech recognition to dictate and execute commands hands-free\nTip: You can also tap the microphone icon on the toolbar or long-press the enter button.</string>
     <string name="location_off">Turn on GPS</string>
     <string name="share_label">Share</string>
     <string name="output_about">Francesco Andreuzzi (Italy)\n\t-> Programmer
@@ -432,5 +452,4 @@
     </string>
 
     <string name="help_username">Change the username and device name: username [new_user] [new_device]</string>
-    <string name="help_bbman">-install -> download and setup BusyBox\n-remove -> uninstall BusyBox</string>
 </resources>

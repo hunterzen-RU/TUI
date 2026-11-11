@@ -51,7 +51,6 @@ import ohi.andre.consolelauncher.managers.xml.options.Notifications;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Ui;
 import ohi.andre.consolelauncher.tuils.Assist;
-import ohi.andre.consolelauncher.tuils.BusyBoxInstaller;
 import ohi.andre.consolelauncher.tuils.CustomExceptionHandler;
 import ohi.andre.consolelauncher.tuils.LongClickableSpan;
 import ohi.andre.consolelauncher.tuils.PrivateIOReceiver;
@@ -268,10 +267,11 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         filter1.addAction(PublicIOReceiver.ACTION_OUTPUT);
 
         publicIOReceiver = new PublicIOReceiver();
+        String receiveCmdPermission = BuildConfig.APPLICATION_ID + ".permission.RECEIVE_CMD";
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            getApplicationContext().registerReceiver(publicIOReceiver, filter1, "ohi.andre.consolelauncher.permission.RECEIVE_CMD", null, Context.RECEIVER_EXPORTED);
+            getApplicationContext().registerReceiver(publicIOReceiver, filter1, receiveCmdPermission, null, Context.RECEIVER_EXPORTED);
         } else {
-            getApplicationContext().registerReceiver(publicIOReceiver, filter1, "ohi.andre.consolelauncher.permission.RECEIVE_CMD", null);
+            getApplicationContext().registerReceiver(publicIOReceiver, filter1, receiveCmdPermission, null);
         }
 
         int requestedOrientation = XMLPrefsManager.getInt(Behavior.orientation);
@@ -392,6 +392,8 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
         ui.focusTerminal();
 
         if(fullscreen) Assist.assistActivity(this);
+
+        checkTuiFileIntent(getIntent());
 
         System.gc();
     }
@@ -631,6 +633,24 @@ public class LauncherActivity extends AppCompatActivity implements Reloadable {
             i.putExtra(MainManager.CMD, cmd);
             i.putExtra(MainManager.NEED_WRITE_INPUT, true);
             LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(i);
+        }
+
+        checkTuiFileIntent(intent);
+    }
+
+    private void checkTuiFileIntent(Intent intent) {
+        if (intent == null || intent.getData() == null) return;
+        android.net.Uri uri = intent.getData();
+        String path = uri.getPath();
+        if (path != null && (path.endsWith(".tui") || Intent.ACTION_VIEW.equals(intent.getAction()))) {
+            try {
+                String fileName = uri.getLastPathSegment();
+                if (fileName == null) fileName = "script.tui";
+                java.io.InputStream is = getContentResolver().openInputStream(uri);
+                ohi.andre.consolelauncher.tuils.TuiScriptEngine.executeScriptInputStream(this, fileName, is);
+            } catch (Exception e) {
+                Tuils.log(e);
+            }
         }
     }
 

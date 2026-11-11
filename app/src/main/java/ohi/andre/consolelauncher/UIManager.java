@@ -59,6 +59,7 @@ import java.util.regex.Pattern;
 
 import ohi.andre.consolelauncher.commands.main.MainPack;
 import ohi.andre.consolelauncher.commands.main.specific.RedirectCommand;
+import ohi.andre.consolelauncher.managers.DashboardManager;
 import ohi.andre.consolelauncher.managers.HTMLExtractManager;
 import ohi.andre.consolelauncher.managers.NotesManager;
 import ohi.andre.consolelauncher.managers.TerminalManager;
@@ -68,6 +69,7 @@ import ohi.andre.consolelauncher.managers.suggestions.SuggestionTextWatcher;
 import ohi.andre.consolelauncher.managers.suggestions.SuggestionsManager;
 import ohi.andre.consolelauncher.managers.xml.XMLPrefsManager;
 import ohi.andre.consolelauncher.managers.xml.options.Behavior;
+import ohi.andre.consolelauncher.managers.xml.options.Dashboard;
 import ohi.andre.consolelauncher.managers.xml.options.Suggestions;
 import ohi.andre.consolelauncher.managers.xml.options.Theme;
 import ohi.andre.consolelauncher.managers.xml.options.Toolbar;
@@ -117,6 +119,7 @@ public class UIManager implements OnTouchListener {
 
     protected Context mContext;
 
+    private DashboardManager dashboardManager;
     private Handler handler;
 
     private DevicePolicyManager policy;
@@ -771,6 +774,7 @@ public class UIManager implements OnTouchListener {
     public MainPack pack;
 
     private boolean clearOnLock;
+    private boolean[] show;
 
     protected UIManager(final Context context, final ViewGroup rootView, MainPack mainPack, boolean canApplyTheme, CommandExecuter executer) {
 
@@ -796,6 +800,7 @@ public class UIManager implements OnTouchListener {
                     if(suggestionsManager != null) suggestionsManager.requestSuggestion(Tuils.EMPTYSTRING);
                 } else if(action.equals(ACTION_UPDATE_HINT)) {
                     mTerminalAdapter.setDefaultHint();
+                    updateDeviceStatus();
                 } else if(action.equals(ACTION_ROOT)) {
                     mTerminalAdapter.onRoot();
                 } else if(action.equals(ACTION_NOROOT)) {
@@ -1014,7 +1019,7 @@ public class UIManager implements OnTouchListener {
                 (TextView) rootView.findViewById(R.id.tv8),
         };
 
-        boolean[] show = new boolean[Label.values().length];
+        show = new boolean[Label.values().length];
         show[Label.notes.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_notes);
         show[Label.ram.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_ram);
         show[Label.device.ordinal()] = XMLPrefsManager.getBoolean(Ui.show_device_name);
@@ -1154,24 +1159,7 @@ public class UIManager implements OnTouchListener {
             handler.post(storageRunnable);
         }
 
-        if (show[Label.device.ordinal()]) {
-            Pattern USERNAME = Pattern.compile("%u", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-            Pattern DV = Pattern.compile("%d", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
-
-            String deviceFormat = XMLPrefsManager.get(Behavior.device_format);
-
-            String username = XMLPrefsManager.get(Ui.username);
-            String deviceName = XMLPrefsManager.get(Ui.deviceName);
-            if (deviceName == null || deviceName.length() == 0) {
-                deviceName = Build.DEVICE;
-            }
-
-            deviceFormat = USERNAME.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(username != null ? username : "null"));
-            deviceFormat = DV.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(deviceName));
-            deviceFormat = Tuils.patternNewline.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
-
-            updateText(Label.device, Tuils.span(mContext, deviceFormat, XMLPrefsManager.getColor(Theme.device_color), labelSizes[Label.device.ordinal()]));
-        }
+        updateDeviceStatus();
 
         if(show[Label.time.ordinal()]) {
             timeRunnable = new TimeRunnable();
@@ -1288,6 +1276,10 @@ public class UIManager implements OnTouchListener {
         View inputOutputView = inflater.inflate(layoutId, null);
         rootView.addView(inputOutputView);
 
+        dashboardManager = new DashboardManager(mContext, rootView);
+        dashboardManager.setCommandExecuter(executer);
+        dashboardManager.start();
+
         terminalView = (TextView) inputOutputView.findViewById(R.id.terminal_view);
         terminalView.setOnTouchListener(this);
         ((View) terminalView.getParent().getParent()).setOnTouchListener(this);
@@ -1330,23 +1322,49 @@ public class UIManager implements OnTouchListener {
         ImageButton nextView = null;
         ImageButton deleteView = null;
         ImageButton pasteView = null;
+        ImageButton micView = null;
+
+        TextView ctrlView = null;
+        TextView shiftView = null;
+        TextView altView = null;
+        TextView leftView = null;
+        TextView rightView = null;
 
         if(!showToolbar) {
-            inputOutputView.findViewById(R.id.tools_view).setVisibility(View.GONE);
+            View toolsContainer = inputOutputView.findViewById(R.id.tools_scroll_container);
+            if (toolsContainer != null) {
+                toolsContainer.setVisibility(View.GONE);
+            } else {
+                inputOutputView.findViewById(R.id.tools_view).setVisibility(View.GONE);
+            }
             toolbarView = null;
         } else {
             backView = (ImageButton) inputOutputView.findViewById(R.id.back_view);
             nextView = (ImageButton) inputOutputView.findViewById(R.id.next_view);
             deleteView = (ImageButton) inputOutputView.findViewById(R.id.delete_view);
             pasteView = (ImageButton) inputOutputView.findViewById(R.id.paste_view);
+            micView = (ImageButton) inputOutputView.findViewById(R.id.mic_view);
 
-            toolbarView = inputOutputView.findViewById(R.id.tools_view);
+            ctrlView = (TextView) inputOutputView.findViewById(R.id.ctrl_view);
+            shiftView = (TextView) inputOutputView.findViewById(R.id.shift_view);
+            altView = (TextView) inputOutputView.findViewById(R.id.alt_view);
+            leftView = (TextView) inputOutputView.findViewById(R.id.left_view);
+            rightView = (TextView) inputOutputView.findViewById(R.id.right_view);
+
+            toolbarView = inputOutputView.findViewById(R.id.tools_scroll_container);
+            if (toolbarView == null) {
+                toolbarView = inputOutputView.findViewById(R.id.tools_view);
+            }
             hideToolbarNoInput = XMLPrefsManager.getBoolean(Toolbar.hide_toolbar_no_input);
 
             applyBgRect(toolbarView, bgRectColors[TOOLBAR_BGCOLOR_INDEX], bgColors[TOOLBAR_BGCOLOR_INDEX], margins[TOOLBAR_MARGINS_INDEX], strokeWidth, cornerRadius);
         }
 
         mTerminalAdapter = new TerminalManager(terminalView, inputView, prefixView, submitView, backView, nextView, deleteView, pasteView, context, mainPack, executer);
+        mainPack.terminal = mTerminalAdapter;
+        if (showToolbar) {
+            mTerminalAdapter.setupExtraToolbarKeys(ctrlView, shiftView, altView, leftView, rightView, micView);
+        }
 
         if (XMLPrefsManager.getBoolean(Suggestions.show_suggestions)) {
             HorizontalScrollView sv = (HorizontalScrollView) rootView.findViewById(R.id.suggestions_container);
@@ -1375,6 +1393,36 @@ public class UIManager implements OnTouchListener {
         int drawTimes = XMLPrefsManager.getInt(Ui.text_redraw_times);
         if(drawTimes <= 0) drawTimes = 1;
         OutlineTextView.redrawTimes = drawTimes;
+    }
+
+    public void updateDeviceStatus() {
+        if (show == null || labelSizes == null) return;
+        if (show[Label.device.ordinal()]) {
+            Pattern USERNAME = Pattern.compile("%u", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+            Pattern DV = Pattern.compile("%d", Pattern.CASE_INSENSITIVE | Pattern.LITERAL);
+
+            String deviceFormat = XMLPrefsManager.get(Behavior.device_format);
+
+            String username = XMLPrefsManager.get(Ui.username);
+            String deviceName = XMLPrefsManager.get(Ui.deviceName);
+            if (deviceName == null || deviceName.length() == 0) {
+                deviceName = Build.DEVICE;
+            }
+
+            deviceFormat = USERNAME.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(username != null ? username : "null"));
+            deviceFormat = DV.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(deviceName));
+            deviceFormat = Tuils.patternNewline.matcher(deviceFormat).replaceAll(Matcher.quoteReplacement(Tuils.NEWLINE));
+
+            boolean termuxActive = ohi.andre.consolelauncher.managers.TermuxSessionManager.Companion.isSessionActive();
+            String termuxTag = termuxActive ? "  [TERMUX: ACTIVE]" : "  [TERMUX: IDLE]";
+            int termuxColor = termuxActive ? Color.parseColor("#00FF66") : Color.parseColor("#768390");
+
+            CharSequence baseDevice = Tuils.span(mContext, deviceFormat, XMLPrefsManager.getColor(Theme.device_color), labelSizes[Label.device.ordinal()]);
+            CharSequence statusTag = Tuils.span(mContext, termuxTag, termuxColor, labelSizes[Label.device.ordinal()]);
+            CharSequence fullDeviceStatus = TextUtils.concat(baseDevice, statusTag);
+
+            updateText(Label.device, fullDeviceStatus);
+        }
     }
 
     public static int[] getListOfIntValues(String values, int length, int defaultValue) {
@@ -1457,6 +1505,8 @@ public class UIManager implements OnTouchListener {
     }
 
     public void dispose() {
+        if(dashboardManager != null) dashboardManager.pause();
+
         if(handler != null) {
             handler.removeCallbacksAndMessages(null);
             handler = null;
@@ -1483,6 +1533,7 @@ public class UIManager implements OnTouchListener {
     }
 
     public void onStart(boolean openKeyboardOnStart) {
+        if(dashboardManager != null) dashboardManager.resume();
         if(openKeyboardOnStart) openKeyboard();
     }
 
@@ -1527,6 +1578,7 @@ public class UIManager implements OnTouchListener {
     }
 
     public void pause() {
+        if(dashboardManager != null) dashboardManager.pause();
         closeKeyboard();
     }
 

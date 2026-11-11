@@ -1,0 +1,16 @@
+# SysInfo - System Health Check
+echo ============================
+echo SYSTEM HEALTH CHECK
+echo ============================
+echo Device: {{device}}
+echo OS: {{os_version}}
+echo User: {{user}}
+echo ----------------------------
+echo RAM Usage: {{ram_used}} / {{ram_total}} ({{ram_avail}} available)
+echo CPU Usage: {{cpu_usage}}%
+echo Uptime: {{uptime}}s
+echo ----------------------------
+echo Network: {{network}} ({{network_name}})
+echo DL Total: {{network_download}}
+echo UL Total: {{network_upload}}
+echo ============================

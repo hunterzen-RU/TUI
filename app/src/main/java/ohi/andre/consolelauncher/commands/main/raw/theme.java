@@ -189,8 +189,83 @@ public class theme extends ParamCommand {
                         
                         suggestionColors.put(Suggestions.alias_text_color, "#000000");
                         break;
+                    case "matrix":
+                        colors.put(backgroundTarget, transPrefix + "000800");
+                        colors.put(Theme.input_color, "#00FF41");
+                        colors.put(Theme.output_color, "#008F11");
+                        colors.put(Theme.device_color, "#00FF66");
+                        colors.put(Theme.enter_color, "#00FF41");
+                        colors.put(Theme.toolbar_color, "#00FF41");
+                        colors.put(Theme.time_color, "#003B00");
+
+                        suggestionColors.put(Suggestions.apps_bg_color, "#008F11");
+                        suggestionColors.put(Suggestions.alias_bg_color, "#00FF41");
+                        suggestionColors.put(Suggestions.cmd_bg_color, "#003B00");
+                        suggestionColors.put(Suggestions.file_bg_color, "#00FF66");
+                        suggestionColors.put(Suggestions.song_bg_color, "#008F11");
+                        break;
+                    case "dracula":
+                        colors.put(backgroundTarget, transPrefix + "282A36");
+                        colors.put(Theme.input_color, "#F8F8F2");
+                        colors.put(Theme.output_color, "#BD93F9");
+                        colors.put(Theme.device_color, "#FF79C6");
+                        colors.put(Theme.enter_color, "#50FA7B");
+                        colors.put(Theme.toolbar_color, "#8BE9FD");
+                        colors.put(Theme.time_color, "#6272A4");
+
+                        suggestionColors.put(Suggestions.apps_bg_color, "#BD93F9");
+                        suggestionColors.put(Suggestions.alias_bg_color, "#FF79C6");
+                        suggestionColors.put(Suggestions.cmd_bg_color, "#8BE9FD");
+                        suggestionColors.put(Suggestions.file_bg_color, "#50FA7B");
+                        suggestionColors.put(Suggestions.song_bg_color, "#FFB86C");
+                        break;
+                    case "catppuccin":
+                        colors.put(backgroundTarget, transPrefix + "1E1E2E");
+                        colors.put(Theme.input_color, "#CDD6F4");
+                        colors.put(Theme.output_color, "#89B4FA");
+                        colors.put(Theme.device_color, "#CBA6F7");
+                        colors.put(Theme.enter_color, "#A6E3A1");
+                        colors.put(Theme.toolbar_color, "#FAB387");
+                        colors.put(Theme.time_color, "#6C7086");
+
+                        suggestionColors.put(Suggestions.apps_bg_color, "#89B4FA");
+                        suggestionColors.put(Suggestions.alias_bg_color, "#CBA6F7");
+                        suggestionColors.put(Suggestions.cmd_bg_color, "#F38BA8");
+                        suggestionColors.put(Suggestions.file_bg_color, "#A6E3A1");
+                        suggestionColors.put(Suggestions.song_bg_color, "#FAB387");
+                        break;
+                    case "nord":
+                        colors.put(backgroundTarget, transPrefix + "2E3440");
+                        colors.put(Theme.input_color, "#ECEFF4");
+                        colors.put(Theme.output_color, "#88C0D0");
+                        colors.put(Theme.device_color, "#81A1C1");
+                        colors.put(Theme.enter_color, "#A3BE8C");
+                        colors.put(Theme.toolbar_color, "#88C0D0");
+                        colors.put(Theme.time_color, "#4C566A");
+
+                        suggestionColors.put(Suggestions.apps_bg_color, "#88C0D0");
+                        suggestionColors.put(Suggestions.alias_bg_color, "#81A1C1");
+                        suggestionColors.put(Suggestions.cmd_bg_color, "#5E81AC");
+                        suggestionColors.put(Suggestions.file_bg_color, "#A3BE8C");
+                        suggestionColors.put(Suggestions.song_bg_color, "#EBCB8B");
+                        break;
+                    case "gruvbox":
+                        colors.put(backgroundTarget, transPrefix + "282828");
+                        colors.put(Theme.input_color, "#EBDBB2");
+                        colors.put(Theme.output_color, "#FE8019");
+                        colors.put(Theme.device_color, "#FABD2F");
+                        colors.put(Theme.enter_color, "#B8BB26");
+                        colors.put(Theme.toolbar_color, "#8EC07C");
+                        colors.put(Theme.time_color, "#928374");
+
+                        suggestionColors.put(Suggestions.apps_bg_color, "#FE8019");
+                        suggestionColors.put(Suggestions.alias_bg_color, "#FABD2F");
+                        suggestionColors.put(Suggestions.cmd_bg_color, "#8EC07C");
+                        suggestionColors.put(Suggestions.file_bg_color, "#B8BB26");
+                        suggestionColors.put(Suggestions.song_bg_color, "#D3869B");
+                        break;
                     default:
-                        return "Unknown preset. Available: blue, red, green, pink, bw, cyberpunk";
+                        return "Unknown preset. Available: blue, red, green, pink, bw, cyberpunk, matrix, dracula, catppuccin, nord, gruvbox";
                 }
 
                 // Force toolbar_bg to transparent to avoid coloring the entire bar
@@ -210,6 +285,27 @@ public class theme extends ParamCommand {
                 } catch (Exception e) {}
 
                 return "Applied " + name + " preset!";
+            }
+        },
+        ls {
+            @Override
+            public int[] args() { return new int[0]; }
+
+            @Override
+            public String exec(ExecutePack pack) {
+                return "Available Theme Presets:\n" +
+                       "• matrix     -> Terminal hacker phosphor green on deep black\n" +
+                       "• dracula    -> Iconic purple, pink, and cyan palette\n" +
+                       "• catppuccin -> Modern warm pastel mocha aesthetic\n" +
+                       "• nord       -> Arctic clean frost blues & snow storm\n" +
+                       "• gruvbox    -> Retro warm contrast palette\n" +
+                       "• cyberpunk  -> High-voltage neon yellow, cyan, and red\n" +
+                       "• blue       -> Deep navy and bright azure\n" +
+                       "• red        -> Crimson & crimson glow\n" +
+                       "• green      -> Emerald green\n" +
+                       "• pink       -> Neon magenta & rose\n" +
+                       "• bw         -> High contrast monochrome black & white\n\n" +
+                       "Usage: theme -preset [name]";
             }
         },
         standard {

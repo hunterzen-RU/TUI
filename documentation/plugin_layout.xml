@@ -1,0 +1,70 @@
+<!-- 
+  Plugin Layout Snippet 
+  Plugins can launch their own activities or show custom UIs.
+  This snippet shows the Nordic/TUI aesthetic used in the launcher.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0B0F19"
+    android:padding="16dp">
+
+    <!-- Header Banner -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="PLUGIN MODULE NAME"
+        android:textColor="#00FF66"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:fontFamily="monospace"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- Main Content Area (Nordic Blue Background) -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="#161C2C"
+        android:padding="8dp">
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Status: OK\nBuffer: READY"
+            android:textColor="#D8DEE9"
+            android:fontFamily="monospace"
+            android:textSize="14sp" />
+            
+    </FrameLayout>
+
+    <!-- Footer Action Area -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="16dp">
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="CANCEL"
+            android:backgroundTint="#2E3440"
+            android:textColor="#FFFFFF"
+            android:fontFamily="monospace"/>
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="EXECUTE"
+            android:backgroundTint="#00FF66"
+            android:textColor="#000000"
+            android:fontFamily="monospace"
+            android:layout_marginStart="8dp"/>
+            
+    </LinearLayout>
+
+</LinearLayout>

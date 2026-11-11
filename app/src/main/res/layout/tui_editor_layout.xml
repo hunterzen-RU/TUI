@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#0B0F19">
+
+    <!-- Custom Toolbar -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:orientation="horizontal"
+        android:background="#161C2C"
+        android:gravity="center_vertical"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp">
+
+        <TextView
+            android:id="@+id/editor_filename_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Untitled.tui"
+            android:textColor="#00FF66"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:fontFamily="monospace" />
+
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SAVE"
+            android:backgroundTint="#2E3440"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_dry_run"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DRY"
+            android:backgroundTint="#2E3440"
+            android:textColor="#FFFFFF"
+            android:textSize="12sp"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_run"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="RUN"
+            android:backgroundTint="#00FF66"
+            android:textColor="#000000"
+            android:textSize="12sp" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true">
+
+        <EditText
+            android:id="@+id/tui_editor_et"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top"
+            android:background="@null"
+            android:padding="16dp"
+            android:textColor="#D8DEE9"
+            android:textSize="14sp"
+            android:fontFamily="monospace"
+            android:inputType="textMultiLine|textNoSuggestions"
+            android:scrollHorizontally="true" />
+
+    </ScrollView>
+
+</LinearLayout>

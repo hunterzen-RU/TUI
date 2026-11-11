@@ -42,7 +42,7 @@ public class CommandTuils {
         Command command = new Command();
 
         String name = CommandTuils.findName(input);
-        if (!Tuils.isAlpha(name))
+        if (name == null || name.length() == 0)
             return null;
 
         CommandAbstraction cmd = info.commandGroup.getCommandByName(name);
@@ -487,6 +487,10 @@ public class CommandTuils {
             xmlPrefsFiles.add(AppsManager.PATH);
             xmlPrefsFiles.add(NotificationManager.PATH);
             xmlPrefsFiles.add(RssManager.PATH);
+            xmlPrefsFiles.add("dashboard-item.xml");
+            xmlPrefsFiles.add("dashboard_item.xml");
+            xmlPrefsFiles.add("variable.xml");
+            xmlPrefsFiles.add("variables.xml");
         }
 
         for(String xs : xmlPrefsFiles) {

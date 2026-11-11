@@ -68,6 +68,8 @@ public class MainPack extends ExecutePack {
 
     public int commandColor = TerminalManager.NO_COLOR;
 
+    public TerminalManager terminal;
+
     public MainPack(Context context, CommandGroup commandGroup, AliasManager alMgr, AppsManager appmgr, MusicManager2 p,
                     ContactManager c, Redirectator redirectator, RssManager rssManager, OkHttpClient client) {
         super(commandGroup);

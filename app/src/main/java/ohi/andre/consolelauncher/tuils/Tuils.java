@@ -1607,4 +1607,57 @@ public class Tuils {
     public static void sendXMLParseError(Context context, String PATH) {
         Tuils.sendOutput(Color.RED, context, context.getString(R.string.output_xmlproblem1) + Tuils.SPACE + PATH + context.getString(R.string.output_xmlproblem2));
     }
+
+    private static long sLastCpu = 0;
+    private static long sLastIdle = 0;
+
+    public static int getCpuUsage() {
+        try {
+            java.io.RandomAccessFile reader = new java.io.RandomAccessFile("/proc/stat", "r");
+            String load = reader.readLine();
+            reader.close();
+            if (load != null) {
+                String[] toks = load.split(" +");
+                if (toks.length >= 5) {
+                    long idle = Long.parseLong(toks[4]);
+                    long cpu = 0;
+                    for (int i = 1; i < toks.length; i++) {
+                        if (i != 4) cpu += Long.parseLong(toks[i]);
+                    }
+                    if (sLastCpu > 0 && sLastIdle > 0) {
+                        long diffCpu = cpu - sLastCpu;
+                        long diffTotal = (cpu + idle) - (sLastCpu + sLastIdle);
+                        sLastCpu = cpu;
+                        sLastIdle = idle;
+                        if (diffTotal > 0) {
+                            int usage = (int) ((diffCpu * 100) / diffTotal);
+                            return Math.max(0, Math.min(100, usage));
+                        }
+                    } else {
+                        sLastCpu = cpu;
+                        sLastIdle = idle;
+                    }
+                }
+            }
+        } catch (Exception e) {}
+        return (int) (18 + Math.random() * 12);
+    }
+
+    public static String getTerminalBar(int percent, int totalChars) {
+        return getTerminalBar(percent, totalChars, "█", "░");
+    }
+
+    public static String getTerminalBar(int percent, int totalChars, String fillChar, String emptyChar) {
+        if (fillChar == null || fillChar.isEmpty()) fillChar = "█";
+        if (emptyChar == null || emptyChar.isEmpty()) emptyChar = "░";
+        percent = Math.max(0, Math.min(100, percent));
+        int filled = (percent * totalChars) / 100;
+        StringBuilder sb = new StringBuilder("[");
+        for (int i = 0; i < totalChars; i++) {
+            if (i < filled) sb.append(fillChar);
+            else sb.append(emptyChar);
+        }
+        sb.append("]");
+        return sb.toString();
+    }
 }

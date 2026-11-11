@@ -149,6 +149,62 @@ public class music extends ParamCommand {
             public String onArgNotFound(ExecutePack pack, int indexNotFound) {
                 return pack.context.getString(R.string.invalid_integer);
             }
+        },
+        toggle {
+            @Override
+            public String exec(ExecutePack pack) {
+                if (((MainPack) pack).player == null) {
+                    execute("PLAY_PAUSE");
+                    return "Toggled system media playback.";
+                }
+                MusicManager2 m = ((MainPack) pack).player;
+                if (m.isPlaying()) {
+                    m.pause();
+                    ohi.andre.consolelauncher.managers.VariablesManager.setVariable("current_media_state", "Paused");
+                    return "Paused music.";
+                } else {
+                    String title = m.play();
+                    ohi.andre.consolelauncher.managers.VariablesManager.setVariable("current_media_state", "Playing");
+                    if (title != null) {
+                        ohi.andre.consolelauncher.managers.VariablesManager.setVariable("current_media_track", title);
+                    }
+                    return "Playing: " + (title != null ? title : "track");
+                }
+            }
+        },
+        now {
+            @Override
+            public String exec(ExecutePack pack) {
+                if (((MainPack) pack).player == null) {
+                    String track = ohi.andre.consolelauncher.managers.VariablesManager.getVariable("current_media_track");
+                    String state = ohi.andre.consolelauncher.managers.VariablesManager.getLiveValue(pack.context, "media_playback_state");
+                    return "System Media: " + track + " [" + state + "]";
+                }
+                MusicManager2 m = ((MainPack) pack).player;
+                Song song = m.get(m.getSongIndex());
+                if (song == null) return "No track currently loaded.";
+
+                int curS = m.getCurrentPosition() / 1000;
+                int durS = m.getDuration() / 1000;
+                int percent = durS > 0 ? (curS * 100 / durS) : 0;
+                if (percent > 100) percent = 100;
+
+                int barWidth = 18;
+                int pos = (percent * barWidth) / 100;
+                StringBuilder bar = new StringBuilder("[");
+                for (int i = 0; i < barWidth; i++) {
+                    if (i == pos) bar.append("●");
+                    else if (i < pos) bar.append("━");
+                    else bar.append("─");
+                }
+                bar.append("]");
+
+                String curTime = String.format(java.util.Locale.US, "%d:%02d", curS / 60, curS % 60);
+                String durTime = String.format(java.util.Locale.US, "%d:%02d", durS / 60, durS % 60);
+
+                return "🎵 " + song.getTitle() + "\n" +
+                       (m.isPlaying() ? "▶ Playing " : "⏸ Paused ") + bar.toString() + " " + curTime + " / " + durTime + " (" + percent + "%)";
+            }
         };
 
         static Param get(String p) {

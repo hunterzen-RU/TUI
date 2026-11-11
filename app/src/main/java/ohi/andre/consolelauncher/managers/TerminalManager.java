@@ -4,14 +4,18 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.IBinder;
+import android.text.Editable;
 import android.text.InputType;
 import android.text.Layout;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.text.style.ForegroundColorSpan;
+import android.view.HapticFeedbackConstants;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -22,6 +26,7 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 
 import java.lang.reflect.Field;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -73,6 +78,7 @@ public class TerminalManager {
 
     private List<String> cmdList = new ArrayList<>(CMD_LIST_SIZE);
     private int howBack = -1;
+    private static final String HISTORY_FILE = "history.txt";
 
     private Runnable mScrollRunnable = new Runnable() {
         @Override
@@ -116,6 +122,7 @@ public class TerminalManager {
         this.executer = executer;
 
         this.mainPack = mainPack;
+        loadHistory();
 
         this.clickCommands = XMLPrefsManager.getBoolean(Behavior.click_commands);
         this.longClickCommands = XMLPrefsManager.getBoolean(Behavior.long_click_commands);
@@ -139,6 +146,11 @@ public class TerminalManager {
         prefixView.setTextColor(XMLPrefsManager.getColor(Theme.input_color));
         prefixView.setTextSize(ioSize);
         prefixView.setText(prefix.endsWith(Tuils.SPACE) ? prefix : prefix + Tuils.SPACE);
+        prefixView.setOnLongClickListener(v -> {
+            v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+            startVoiceRecognition();
+            return true;
+        });
         this.mPrefix = prefixView;
 
         int toolbarColor = XMLPrefsManager.getColor(Theme.toolbar_color);
@@ -146,25 +158,40 @@ public class TerminalManager {
 
         if (submitView != null) {
             submitView.setColorFilter(enterColor, android.graphics.PorterDuff.Mode.SRC_IN);
-            submitView.setOnClickListener(v -> onNewInput());
+            submitView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                onNewInput();
+            });
+            submitView.setOnLongClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                startVoiceRecognition();
+                return true;
+            });
         }
 
         if (backView != null) {
             backView.setColorFilter(toolbarColor, android.graphics.PorterDuff.Mode.SRC_IN);
             backView.setBackgroundColor(0);
-            backView.setOnClickListener(v -> onBackPressed());
+            backView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                onBackPressed();
+            });
         }
 
         if (nextView != null) {
             nextView.setColorFilter(toolbarColor, android.graphics.PorterDuff.Mode.SRC_IN);
             nextView.setBackgroundColor(0);
-            nextView.setOnClickListener(v -> onNextPressed());
+            nextView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                onNextPressed();
+            });
         }
 
         if (pasteView != null) {
             pasteView.setColorFilter(toolbarColor, android.graphics.PorterDuff.Mode.SRC_IN);
             pasteView.setBackgroundColor(0);
             pasteView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
                 String text = Tuils.getTextFromClipboard(context);
                 if(text != null && text.length() > 0) {
                     setInput(getInput() + text);
@@ -175,7 +202,10 @@ public class TerminalManager {
         if (deleteView != null) {
             deleteView.setColorFilter(toolbarColor, android.graphics.PorterDuff.Mode.SRC_IN);
             deleteView.setBackgroundColor(0);
-            deleteView.setOnClickListener(v -> setInput(Tuils.EMPTYSTRING));
+            deleteView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                setInput(Tuils.EMPTYSTRING);
+            });
         }
 
         this.mTerminalView = terminalView;
@@ -240,6 +270,7 @@ public class TerminalManager {
         this.mScrollView = (ScrollView) v;
 
         this.mInputView = inputView;
+        this.mInputView.setHapticFeedbackEnabled(true);
         this.mInputView.setTextSize(ioSize);
         this.mInputView.setTextColor(XMLPrefsManager.getColor(Theme.input_color));
         this.mInputView.setTypeface(Tuils.getTypeface(context));
@@ -247,6 +278,22 @@ public class TerminalManager {
         this.mInputView.setInputType(InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         Tuils.setCursorDrawableColor(this.mInputView, XMLPrefsManager.getColor(Theme.cursor_color));
         this.mInputView.setHighlightColor(Color.TRANSPARENT);
+
+        this.mInputView.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int after) {
+                if (mInputView != null && (after > 0 || before > 0)) {
+                    mInputView.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {}
+        });
+
         this.mInputView.setOnEditorActionListener((v1, actionId, event) -> {
             if(!mInputView.hasFocus()) mInputView.requestFocus();
 
@@ -264,13 +311,26 @@ public class TerminalManager {
             }
 
             if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE || actionId == KeyEvent.ACTION_DOWN) {
+                v1.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                 onNewInput();
             }
 
-//                if (event == null && actionId == EditorInfo.IME_NULL) onNewInput();
-//                if (event != null && event.getAction() == KeyEvent.ACTION_DOWN && event.getKeyCode() == KeyEvent.KEYCODE_ENTER) onNewInput();
-
             return true;
+        });
+
+        this.mInputView.setOnKeyListener((v12, keyCode, event) -> {
+            if (event.getAction() == KeyEvent.ACTION_DOWN) {
+                if (keyCode == KeyEvent.KEYCODE_DPAD_UP) {
+                    v12.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                    onBackPressed();
+                    return true;
+                } else if (keyCode == KeyEvent.KEYCODE_DPAD_DOWN) {
+                    v12.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                    onNextPressed();
+                    return true;
+                }
+            }
+            return false;
         });
 //        if(autoLowerFirstChar) {
 //            this.mInputView.setFilters(new InputFilter[] {new InputFilter() {
@@ -283,7 +343,162 @@ public class TerminalManager {
 //                    return source;
 //                }
 //            }});
-//        }
+    }
+
+    public void setupExtraToolbarKeys(TextView ctrlView, TextView shiftView, TextView altView, TextView leftView, TextView rightView) {
+        setupExtraToolbarKeys(ctrlView, shiftView, altView, leftView, rightView, null);
+    }
+
+    public void setupExtraToolbarKeys(TextView ctrlView, TextView shiftView, TextView altView, TextView leftView, TextView rightView, View micView) {
+        int toolbarColor = XMLPrefsManager.getColor(Theme.toolbar_color);
+
+        if (ctrlView != null) {
+            ctrlView.setTextColor(toolbarColor);
+            ctrlView.setTypeface(Tuils.getTypeface(mContext));
+            ctrlView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                onCtrlPressed();
+            });
+        }
+
+        if (shiftView != null) {
+            shiftView.setTextColor(toolbarColor);
+            shiftView.setTypeface(Tuils.getTypeface(mContext));
+            shiftView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                onShiftPressed();
+            });
+        }
+
+        if (altView != null) {
+            altView.setTextColor(toolbarColor);
+            altView.setTypeface(Tuils.getTypeface(mContext));
+            altView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                onAltPressed();
+            });
+        }
+
+        if (leftView != null) {
+            leftView.setTextColor(toolbarColor);
+            leftView.setTypeface(Tuils.getTypeface(mContext));
+            leftView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                onLeftPressed();
+            });
+        }
+
+        if (rightView != null) {
+            rightView.setTextColor(toolbarColor);
+            rightView.setTypeface(Tuils.getTypeface(mContext));
+            rightView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                onRightPressed();
+            });
+        }
+
+        if (micView != null) {
+            if (micView instanceof ImageButton) {
+                ((ImageButton) micView).setColorFilter(toolbarColor, android.graphics.PorterDuff.Mode.SRC_IN);
+                ((ImageButton) micView).setBackgroundColor(0);
+            }
+            micView.setOnClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                startVoiceRecognition();
+            });
+            micView.setOnLongClickListener(v -> {
+                v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS);
+                startVoiceRecognition();
+                return true;
+            });
+        }
+    }
+
+    public void startVoiceRecognition() {
+        if (mContext == null) return;
+        Tuils.sendOutput(mContext, "🎙️ Listening... Speak your command.");
+        VoiceRecognitionManager.getInstance().startListening(mContext, mInputView, new VoiceRecognitionManager.VoiceCallback() {
+            @Override
+            public void onSpeechStart() {
+                if (mInputView != null) {
+                    mInputView.setHint("Listening...");
+                }
+            }
+
+            @Override
+            public void onPartialResult(String partialText) {
+                if (mInputView != null) {
+                    setInput(partialText);
+                }
+            }
+
+            @Override
+            public void onFinalResult(String recognizedCommand) {
+                if (mInputView != null) {
+                    setInput(recognizedCommand);
+                    Tuils.sendOutput(mContext, "✓ Voice input: \"" + recognizedCommand + "\"");
+                    onNewInput();
+                }
+            }
+
+            @Override
+            public void onError(String errorMessage) {
+                if (mInputView != null && defaultHint) {
+                    mInputView.setHint(Tuils.getHint(mainPack.currentDirectory.getAbsolutePath()));
+                }
+                Tuils.sendOutput(Color.RED, mContext, "Voice input: " + errorMessage);
+            }
+        });
+    }
+
+    private void onCtrlPressed() {
+        if (mInputView == null) return;
+        int sel = mInputView.getSelectionStart();
+        if (sel >= 0) {
+            mInputView.getText().insert(sel, "^C");
+        } else {
+            setInput(getInput() + "^C");
+        }
+    }
+
+    private void onShiftPressed() {
+        if (mInputView == null) return;
+        int start = mInputView.getSelectionStart();
+        int end = mInputView.getSelectionEnd();
+        if (start >= 0 && end > start) {
+            String selected = mInputView.getText().subSequence(start, end).toString();
+            mInputView.getText().replace(start, end, selected.toUpperCase());
+        } else if (start >= 0) {
+            mInputView.getText().insert(start, "SHIFT ");
+        } else {
+            setInput(getInput() + "SHIFT ");
+        }
+    }
+
+    private void onAltPressed() {
+        if (mInputView == null) return;
+        int sel = mInputView.getSelectionStart();
+        if (sel >= 0) {
+            mInputView.getText().insert(sel, "ALT ");
+        } else {
+            setInput(getInput() + "ALT ");
+        }
+    }
+
+    private void onLeftPressed() {
+        if (mInputView == null) return;
+        int cursor = mInputView.getSelectionStart();
+        if (cursor > 0) {
+            mInputView.setSelection(cursor - 1);
+        }
+    }
+
+    private void onRightPressed() {
+        if (mInputView == null) return;
+        int cursor = mInputView.getSelectionStart();
+        if (cursor < mInputView.getText().length()) {
+            mInputView.setSelection(cursor + 1);
+        }
     }
 
     private void setupNewInput() {
@@ -313,6 +528,13 @@ public class TerminalManager {
         }
 
         if(input.length() > 0) {
+            if (mInputView != null) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                    mInputView.performHapticFeedback(HapticFeedbackConstants.CONFIRM);
+                } else {
+                    mInputView.performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
+                }
+            }
             clearCmdsCount++;
             if(clearCmdsCount != 0 && clearAfterCmds > 0 && clearCmdsCount % clearAfterCmds == 0) clear();
 
@@ -323,6 +545,7 @@ public class TerminalManager {
             }
             cmdList.add(cmdList.size(), cmd);
             howBack = -1;
+            saveHistory();
         }
 
 //        DO NOT USE THE INTENT APPROACH
@@ -349,7 +572,11 @@ public class TerminalManager {
     }
 
     public void setOutput(CharSequence output, int type) {
-        if (output == null || output.length() == 0) return;
+        android.util.Log.d("TerminalManager", "setOutput called: " + output + " type: " + type);
+        if (output == null || output.length() == 0) {
+            android.util.Log.d("TerminalManager", "setOutput: output is null or empty");
+            return;
+        }
 
         writeToView(output, type);
     }
@@ -428,13 +655,20 @@ public class TerminalManager {
                 boolean su = t.toString().startsWith("su ") || suMode;
 
                 SpannableString si = Tuils.span(inputFormat, inputColor);
-                if(clickCommands || longClickCommands) si.setSpan(new LongClickableSpan(clickCommands ? t.toString() : null, longClickCommands ? t.toString() : null, PrivateIOReceiver.ACTION_INPUT), 0,
-                        si.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
 
                 s = TimeManager.instance.replace(si);
-                s = TextUtils.replace(s,
-                        new String[] {FORMAT_INPUT, FORMAT_PREFIX, FORMAT_NEWLINE, FORMAT_INPUT.toUpperCase(), FORMAT_PREFIX.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
-                        new CharSequence[] {t, su ? suPrefix : prefix, Tuils.NEWLINE, t, su ? suPrefix : prefix, Tuils.NEWLINE});
+                String sStr = s.toString();
+                sStr = sStr.replace(FORMAT_INPUT, t)
+                        .replace(FORMAT_PREFIX, su ? suPrefix : prefix)
+                        .replace(FORMAT_NEWLINE, Tuils.NEWLINE)
+                        .replace(FORMAT_INPUT.toUpperCase(), t)
+                        .replace(FORMAT_PREFIX.toUpperCase(), su ? suPrefix : prefix)
+                        .replace(FORMAT_NEWLINE.toUpperCase(), Tuils.NEWLINE);
+                s = Tuils.span(sStr, inputColor);
+                if(clickCommands || longClickCommands) {
+                    ((SpannableString)s).setSpan(new LongClickableSpan(clickCommands ? t.toString() : null, longClickCommands ? t.toString() : null, PrivateIOReceiver.ACTION_INPUT), 0,
+                            s.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                }
 
                 break;
             case CATEGORY_OUTPUT:
@@ -442,9 +676,12 @@ public class TerminalManager {
 
                 SpannableString so = Tuils.span(outputFormat, outputColor);
 
-                s = TextUtils.replace(so,
-                        new String[] {FORMAT_OUTPUT, FORMAT_NEWLINE, FORMAT_OUTPUT.toUpperCase(), FORMAT_NEWLINE.toUpperCase()},
-                        new CharSequence[] {t, Tuils.NEWLINE, t, Tuils.NEWLINE});
+                String outStr = so.toString();
+                outStr = outStr.replace(FORMAT_OUTPUT, t)
+                        .replace(FORMAT_NEWLINE, Tuils.NEWLINE)
+                        .replace(FORMAT_OUTPUT.toUpperCase(), t)
+                        .replace(FORMAT_NEWLINE.toUpperCase(), Tuils.NEWLINE);
+                s = Tuils.span(outStr, outputColor);
 
                 break;
 //            already colored here
@@ -520,6 +757,41 @@ public class TerminalManager {
         mTerminalView.post(() -> mTerminalView.setText(Tuils.EMPTYSTRING));
         cmdList.clear();
         clearCmdsCount = 0;
+        saveHistory();
+    }
+
+    private void saveHistory() {
+        try {
+            File file = new File(Tuils.getFolder(), HISTORY_FILE);
+            java.io.FileOutputStream fos = new java.io.FileOutputStream(file);
+            for (String cmd : cmdList) {
+                fos.write((cmd + "\n").getBytes());
+            }
+            fos.close();
+        } catch (Exception e) {
+            Tuils.log(e);
+        }
+    }
+
+    private void loadHistory() {
+        try {
+            File file = new File(Tuils.getFolder(), HISTORY_FILE);
+            if (!file.exists()) return;
+
+            java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.FileReader(file));
+            String line;
+            cmdList.clear();
+            while ((line = reader.readLine()) != null) {
+                if (cmdList.size() >= CMD_LIST_SIZE) {
+                    cmdList.remove(0);
+                }
+                cmdList.add(line);
+            }
+            reader.close();
+            howBack = -1;
+        } catch (Exception e) {
+            Tuils.log(e);
+        }
     }
 
     public void onRoot() {
